@@ -1,4 +1,4 @@
-package com.example.tripapp2.domain
+package com.example.tripapp2.domain.entities
 
 enum class Cities(val urlCode: String) {
     MSK("msk"),
