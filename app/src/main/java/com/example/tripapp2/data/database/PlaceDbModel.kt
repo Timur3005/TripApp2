@@ -18,7 +18,7 @@ data class PlaceDbModel(
         val lat: Double,
         val lon: Double,
         val subway: String,
-        val imageUrls: List<String>,
+        val imageUrls: String,
         val isClosed: Boolean,
         val categories: Category,
         val location: Cities,

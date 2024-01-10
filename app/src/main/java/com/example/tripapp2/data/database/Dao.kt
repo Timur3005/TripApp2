@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface Dao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertPlace(placeDbModel: PlaceDbModel)
+    suspend fun insertPlace(placeDbModel: PlaceDbModel)
     @Query("SELECT * FROM places WHERE inLiked == 1")
     fun getLikedPlaces(): Flow<List<PlaceDbModel>>
     @Query("SELECT * FROM places WHERE inRoute == 1")
