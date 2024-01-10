@@ -11,6 +11,7 @@ interface ApplicationRepository {
     suspend fun saveLikedPlace(place: PlaceItemState.Place)
     suspend fun saveRoutePlace(place: PlaceItemState.Place)
     suspend fun deleteLikedPlace(place: PlaceItemState.Place)
+    suspend fun deleteRoutePlace(place: PlaceItemState.Place)
     fun getLikedPlaces(): Flow<List<PlaceItemState.Place>>
     fun getRoutePlaces(): Flow<List<PlaceItemState.Place>>
 }
