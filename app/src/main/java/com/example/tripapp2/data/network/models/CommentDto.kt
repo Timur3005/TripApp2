@@ -10,22 +10,22 @@ data class CommentDto(
     @SerializedName("date_posted")
     @Expose
     val datePosted: Int,
+    @SerializedName("text")
+    @Expose
+    val text: String,
+    @SerializedName("user")
+    @Expose
+    val user: UserDto,
     @SerializedName("is_deleted")
     @Expose
     val isDeleted: Boolean,
     @SerializedName("replies_count")
     @Expose
     val repliesCount: Int,
-    @SerializedName("reply_to")
-    @Expose
-    val replyTo: Int?,
-    @SerializedName("text")
-    @Expose
-    val text: String,
     @SerializedName("thread")
     @Expose
     val thread: Int?,
-    @SerializedName("user")
+    @SerializedName("reply_to")
     @Expose
-    val user: UserDto
+    val replyTo: Int?
 )
