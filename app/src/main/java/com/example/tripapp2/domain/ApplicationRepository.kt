@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface ApplicationRepository {
     suspend fun getShortPlaceItemList(filters: Filters)
     suspend fun getPlaceItem(id: Int)
-    fun getComments(id: Int)
+    suspend fun getComments(id: Int)
     suspend fun saveLikedPlace(place: PlaceItemState.Place)
     suspend fun saveRoutePlace(place: PlaceItemState.Place)
     suspend fun deleteLikedPlace(place: PlaceItemState.Place)

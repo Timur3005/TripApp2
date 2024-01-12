@@ -1,7 +1,6 @@
 package com.example.tripapp2.domain.entities
 
-sealed class PlaceItemCommentsState {
-    data class Comment(
+data class Comment(
         val id: Int,
         val postedDateInMillis: Long,
         val text: String,
@@ -10,8 +9,4 @@ sealed class PlaceItemCommentsState {
         val repliesCount: Int,
         val threadInId: Int?,
         val replyToId: Int?
-    ): PlaceItemCommentsState()
-
-    data object Loading: PlaceItemState()
-    data object Error: PlaceItemState()
-}
+    )

@@ -9,7 +9,8 @@ import com.example.tripapp2.data.network.models.ShortPlaceItemDto
 import com.example.tripapp2.data.network.models.ShortPlacesListContainerDto
 import com.example.tripapp2.domain.entities.Category
 import com.example.tripapp2.domain.entities.Cities
-import com.example.tripapp2.domain.entities.PlaceItemCommentsState
+import com.example.tripapp2.domain.entities.Comment
+import com.example.tripapp2.domain.entities.CommentsState
 import com.example.tripapp2.domain.entities.PlaceItemState
 import com.example.tripapp2.domain.entities.ShortPlaceItem
 import com.example.tripapp2.domain.entities.ShortPlaceItemState
@@ -51,7 +52,7 @@ class PlacesAndCommentsMapper @Inject constructor() {
     )
 
     private fun mapCommentDtoToCommentEntity(commentDto: CommentDto) =
-        PlaceItemCommentsState.Comment(
+        Comment(
             id = commentDto.id,
             postedDateInMillis = commentDto.datePosted.toLong(),
             text = commentDto.text,
@@ -63,10 +64,10 @@ class PlacesAndCommentsMapper @Inject constructor() {
         )
 
     fun mapCommentsContainerToCommentsEntity(commentsContainer: CommentsContainerDto):
-            List<PlaceItemCommentsState.Comment>{
-        return commentsContainer.comments.map {
-            mapCommentDtoToCommentEntity(it)
-        }
+            CommentsState.CommentHolder{
+        return CommentsState.CommentHolder(
+            commentsContainer.comments.map { mapCommentDtoToCommentEntity(it) }
+        )
     }
 
     private fun mapShortPlaceItemToShortPlaceItemEntity(dto: ShortPlaceItemDto) =

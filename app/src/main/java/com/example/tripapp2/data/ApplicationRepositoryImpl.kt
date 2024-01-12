@@ -5,19 +5,23 @@ import com.example.tripapp2.data.network.ApiService
 import com.example.tripapp2.domain.ApplicationRepository
 import com.example.tripapp2.domain.entities.Category
 import com.example.tripapp2.domain.entities.Cities
+import com.example.tripapp2.domain.entities.CommentsState
 import com.example.tripapp2.domain.entities.Filters
 import com.example.tripapp2.domain.entities.PlaceItemState
 import com.example.tripapp2.domain.entities.ShortPlaceItemState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -50,9 +54,7 @@ class ApplicationRepositoryImpl @Inject constructor(
                 )
             )
         }
-    }.catch {
-        emit(ShortPlaceItemState.Error)
-    }.stateIn(
+    }.retry(RETRY_COUNT).catch { emit(ShortPlaceItemState.Error) }.stateIn(
         scope = scope,
         started = SharingStarted.Lazily,
         initialValue = ShortPlaceItemState.Loading
@@ -63,7 +65,8 @@ class ApplicationRepositoryImpl @Inject constructor(
     }
 
     private val _placeItemFlow = MutableStateFlow<PlaceItemState>(PlaceItemState.Loading)
-    val placeItemFlow = _placeItemFlow.asSharedFlow()
+    val placeItemFlow = _placeItemFlow.asStateFlow()
+
     override suspend fun getPlaceItem(id: Int){
         try {
             _placeItemFlow.value = mapper
@@ -77,36 +80,66 @@ class ApplicationRepositoryImpl @Inject constructor(
             }
         }
     }
+    private val responseComments =
+        MutableSharedFlow<Int>(onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val commentListFlow = flow<CommentsState> {
+        responseComments.collect{
+            emit(
+                mapper.mapCommentsContainerToCommentsEntity(
+                    apiService.getCommentsById(placeId = it)
+                )
+            )
+        }
+    }.retry(RETRY_COUNT).catch {
+        emit(CommentsState.Error)
+    }.stateIn(
+        scope = scope,
+        started = SharingStarted.Lazily,
+        initialValue = CommentsState.Loading
+    )
 
-    override fun getComments(id: Int) {
-        TODO("Not yet implemented")
+    override suspend fun getComments(id: Int) {
+        responseComments.emit(id)
     }
 
     override suspend fun saveLikedPlace(place: PlaceItemState.Place) {
-        TODO("Not yet implemented")
+        dao.insertPlace(
+            mapper.mapPlaceEntityToPlaceDBModel(place).copy(inLiked = true)
+        )
     }
 
     override suspend fun saveRoutePlace(place: PlaceItemState.Place) {
-        TODO("Not yet implemented")
+        dao.insertPlace(
+            mapper.mapPlaceEntityToPlaceDBModel(place).copy(inRoute = true)
+        )
     }
 
     override suspend fun deleteLikedPlace(place: PlaceItemState.Place) {
-        TODO("Not yet implemented")
+        dao.updateLiked(place.id)
     }
 
     override suspend fun deleteRoutePlace(place: PlaceItemState.Place) {
-        TODO("Not yet implemented")
+        dao.updateRoute(place.id)
     }
 
     override fun getLikedPlaces(): Flow<List<PlaceItemState.Place>> {
-        TODO("Not yet implemented")
+        return dao.getLikedPlaces().map {
+            it.map { item ->
+                mapper.mapPlaceDBModelToPlaceEntity(item)
+            }
+        }
     }
 
     override fun getRoutePlaces(): Flow<List<PlaceItemState.Place>> {
-        TODO("Not yet implemented")
+        return dao.getRoutePlaces().map {
+            it.map { item ->
+                mapper.mapPlaceDBModelToPlaceEntity(item)
+            }
+        }
     }
 
     companion object{
         private val DEFAULT_FILTERS = Filters(Cities.DEFAULT, listOf(Category.DEFAULT))
+        private const val RETRY_COUNT = 3L
     }
 }

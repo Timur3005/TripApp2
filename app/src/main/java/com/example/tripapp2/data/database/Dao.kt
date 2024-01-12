@@ -16,4 +16,8 @@ interface Dao {
     fun getRoutePlaces(): Flow<List<PlaceDbModel>>
     @Query("SELECT * FROM places WHERE id = :id LIMIT 1")
     suspend fun getPlaceById(id: Int): PlaceDbModel
+    @Query("UPDATE places SET inLiked = NOT inLiked WHERE id = :id")
+    suspend fun updateLiked(id: Int)
+    @Query("UPDATE places SET inRoute = NOT inRoute WHERE id = :id")
+    suspend fun updateRoute(id: Int)
 }
