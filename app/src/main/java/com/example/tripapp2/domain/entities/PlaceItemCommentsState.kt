@@ -8,8 +8,8 @@ sealed class PlaceItemCommentsState {
         val userName: String,
         val userPhotoUrl: String,
         val repliesCount: Int,
-        val threadInId: Int,
-        val replyToId: Int
+        val threadInId: Int?,
+        val replyToId: Int?
     )
 
     data object Loading

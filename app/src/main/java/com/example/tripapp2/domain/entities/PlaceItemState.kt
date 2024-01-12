@@ -15,7 +15,7 @@ sealed class PlaceItemState{
         val subway: String,
         val imageUrls: List<String>,
         val isClosed: Boolean,
-        val categories: Category,
+        val categories: List<Category>,
         val location: Cities,
         val disableComments: Boolean,
         val hasParking: Boolean
