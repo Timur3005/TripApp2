@@ -14,4 +14,6 @@ interface Dao {
     fun getLikedPlaces(): Flow<List<PlaceDbModel>>
     @Query("SELECT * FROM places WHERE inRoute == 1")
     fun getRoutePlaces(): Flow<List<PlaceDbModel>>
+    @Query("SELECT * FROM places WHERE id = :id LIMIT 1")
+    fun getPlaceById(id: Int): PlaceDbModel
 }

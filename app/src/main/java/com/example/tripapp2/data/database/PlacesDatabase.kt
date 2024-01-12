@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 
 @Database(entities = [PlaceDbModel::class], version = 1, exportSchema = false)
+@TypeConverters(EnumCitiesConverter::class, EnumCategoryListConverter::class)
 abstract class PlacesDatabase: RoomDatabase() {
 
     abstract fun getDao(): Dao

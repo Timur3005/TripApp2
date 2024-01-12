@@ -2,8 +2,10 @@ package com.example.tripapp2.data.database
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
 import com.example.tripapp2.domain.entities.Category
 import com.example.tripapp2.domain.entities.Cities
+
 @Entity(tableName = "places")
 data class PlaceDbModel(
         @PrimaryKey
@@ -20,7 +22,9 @@ data class PlaceDbModel(
         val subway: String,
         val imageUrls: String,
         val isClosed: Boolean,
-        val categories: Category,
+        @TypeConverters(EnumCategoryListConverter::class)
+        val categories: List<Category>,
+        @TypeConverters(EnumCitiesConverter::class)
         val location: Cities,
         val disableComments: Boolean,
         val hasParking: Boolean,

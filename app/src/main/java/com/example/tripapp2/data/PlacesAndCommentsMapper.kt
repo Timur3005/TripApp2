@@ -1,5 +1,6 @@
 package com.example.tripapp2.data
 
+import com.example.tripapp2.data.database.PlaceDbModel
 import com.example.tripapp2.data.network.models.CommentDto
 import com.example.tripapp2.data.network.models.CommentsContainerDto
 import com.example.tripapp2.data.network.models.ImageDto
@@ -76,4 +77,44 @@ class PlacesAndCommentsMapper @Inject constructor() {
         dtoContainer.results.map {
             mapShortPlaceItemToShortPlaceItemEntity(it)
         }
+
+    fun mapPlaceEntityToPlaceDBModel(place: PlaceItemState.Place) = PlaceDbModel(
+        id = place.id,
+        title = place.title,
+        address = place.address,
+        timetable = place.timetable,
+        phone = place.phone,
+        bodyText = place.bodyText,
+        description = place.description,
+        lat = place.lat,
+        lon = place.lon,
+        foreignUrl = place.foreignUrl,
+        subway = place.subway,
+        imageUrls = place.imageUrls.joinToString(),
+        isClosed = place.isClosed,
+        categories = place.categories,
+        location = place.location,
+        disableComments = place.disableComments,
+        hasParking = place.hasParking
+    )
+
+    fun mapPlaceDBModelToPlaceEntity(place: PlaceDbModel) = PlaceItemState.Place(
+        id = place.id,
+        title = place.title,
+        address = place.address,
+        timetable = place.timetable,
+        phone = place.phone,
+        bodyText = place.bodyText,
+        description = place.description,
+        lat = place.lat,
+        lon = place.lon,
+        foreignUrl = place.foreignUrl,
+        subway = place.subway,
+        imageUrls = place.imageUrls.split(","),
+        isClosed = place.isClosed,
+        categories = place.categories,
+        location = place.location,
+        disableComments = place.disableComments,
+        hasParking = place.hasParking
+    )
 }
