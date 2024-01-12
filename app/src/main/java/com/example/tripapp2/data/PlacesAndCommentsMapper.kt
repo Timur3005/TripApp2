@@ -12,6 +12,7 @@ import com.example.tripapp2.domain.entities.Cities
 import com.example.tripapp2.domain.entities.PlaceItemCommentsState
 import com.example.tripapp2.domain.entities.PlaceItemState
 import com.example.tripapp2.domain.entities.ShortPlaceItem
+import com.example.tripapp2.domain.entities.ShortPlaceItemState
 import javax.inject.Inject
 
 class PlacesAndCommentsMapper @Inject constructor() {
@@ -20,7 +21,7 @@ class PlacesAndCommentsMapper @Inject constructor() {
         imageDtoList.map { it.imageUrl }
 
     private fun findCategoryObj(category: String) =
-        enumValues<Category>().find { it.type == category } ?: Category.ATTRACTION
+        enumValues<Category>().find { it.nameRU == category } ?: Category.DEFAULT
 
     private fun mapStringListToCategoryList(list: List<String>) = list.map {
         findCategoryObj(it)
@@ -68,15 +69,16 @@ class PlacesAndCommentsMapper @Inject constructor() {
         }
     }
 
-    private fun mapShortPlaceItemToShortPlaceItemEntity(dto: ShortPlaceItemDto) = ShortPlaceItem(
-        id = dto.id,
-        title = dto.title
-    )
+    private fun mapShortPlaceItemToShortPlaceItemEntity(dto: ShortPlaceItemDto) =
+        ShortPlaceItem(
+            id = dto.id,
+            title = dto.title
+        )
 
-    fun mapShortListDtoContainerToShortListEntity(dtoContainer: ShortPlacesListContainerDto) =
-        dtoContainer.results.map {
-            mapShortPlaceItemToShortPlaceItemEntity(it)
-        }
+    fun mapShortListDtoContainerToShortItemStateEntity(dtoContainer: ShortPlacesListContainerDto) =
+        ShortPlaceItemState.ShortPlaceItemList(dtoContainer.results
+            .map { mapShortPlaceItemToShortPlaceItemEntity(it) }
+        )
 
     fun mapPlaceEntityToPlaceDBModel(place: PlaceItemState.Place) = PlaceDbModel(
         id = place.id,

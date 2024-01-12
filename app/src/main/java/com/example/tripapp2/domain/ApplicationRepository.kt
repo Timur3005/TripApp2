@@ -5,8 +5,8 @@ import com.example.tripapp2.domain.entities.PlaceItemState
 import kotlinx.coroutines.flow.Flow
 
 interface ApplicationRepository {
-    fun getShortPlaceItemList(filters: Filters)
-    suspend fun getPlaceItem(id: Int): PlaceItemState.Place
+    suspend fun getShortPlaceItemList(filters: Filters)
+    suspend fun getPlaceItem(id: Int)
     fun getComments(id: Int)
     suspend fun saveLikedPlace(place: PlaceItemState.Place)
     suspend fun saveRoutePlace(place: PlaceItemState.Place)

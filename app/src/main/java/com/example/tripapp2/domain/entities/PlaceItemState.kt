@@ -19,7 +19,7 @@ sealed class PlaceItemState{
         val location: Cities,
         val disableComments: Boolean,
         val hasParking: Boolean
-    )
-    data object Loading
-    data object Error
+    ): PlaceItemState()
+    data object Loading: PlaceItemState()
+    data object Error: PlaceItemState()
 }

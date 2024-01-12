@@ -10,8 +10,8 @@ sealed class PlaceItemCommentsState {
         val repliesCount: Int,
         val threadInId: Int?,
         val replyToId: Int?
-    )
+    ): PlaceItemCommentsState()
 
-    data object Loading
-    data object Error
+    data object Loading: PlaceItemState()
+    data object Error: PlaceItemState()
 }
