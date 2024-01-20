@@ -11,14 +11,11 @@ import com.example.tripapp2.domain.entities.PlaceItemState
 import com.example.tripapp2.domain.entities.ShortPlaceItemState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retry
@@ -35,26 +32,29 @@ class ApplicationRepositoryImpl @Inject constructor(
 
     private val responseShortPlaces = MutableSharedFlow<Filters>()
 
-    val shortPlacesFlow = flow<ShortPlaceItemState>{
+    override val shortPlacesFlow = flow {
         emit(
             mapper.mapShortListDtoContainerToShortItemStateEntity(
                 apiService.getShortPlacesList(
                     location = DEFAULT_FILTERS.location.urlCode,
-                    categories = DEFAULT_FILTERS.category.joinToString(",")
+                    categories = DEFAULT_FILTERS.category.joinToString(",") { it.slug }
                 )
             )
         )
         responseShortPlaces.collect{
+            emit(ShortPlaceItemState.Loading)
             emit(
                 mapper.mapShortListDtoContainerToShortItemStateEntity(
                     apiService.getShortPlacesList(
                         location = it.location.urlCode,
-                        categories = it.category.joinToString(",")
+                        categories = it.category.joinToString(","){item -> item.slug }
                     )
                 )
             )
         }
-    }.retry(RETRY_COUNT).catch { emit(ShortPlaceItemState.Error) }.stateIn(
+    }.retry(RETRY_COUNT).catch{
+        emit(ShortPlaceItemState.Error)
+    }.stateIn(
         scope = scope,
         started = SharingStarted.Lazily,
         initialValue = ShortPlaceItemState.Loading
@@ -64,25 +64,22 @@ class ApplicationRepositoryImpl @Inject constructor(
         responseShortPlaces.emit(filters)
     }
 
-    private val _placeItemFlow = MutableStateFlow<PlaceItemState>(PlaceItemState.Loading)
-    val placeItemFlow = _placeItemFlow.asStateFlow()
+    override val placeItemStateFlow = MutableStateFlow<PlaceItemState>(PlaceItemState.Loading)
 
     override suspend fun getPlaceItem(id: Int){
         try {
-            _placeItemFlow.value = mapper
-                .mapPlaceDBModelToPlaceEntity(dao.getPlaceById(id))
+            placeItemStateFlow.value = mapper.mapPlaceDBModelToPlaceEntity(dao.getPlaceById(id))
         }catch (e: Exception){
             try {
-                _placeItemFlow.value = mapper
-                    .mapPlaceDtoToPlaceEntity(apiService.getFullPlaceItem(id))
+                placeItemStateFlow.value =
+                    mapper.mapPlaceDtoToPlaceEntity(apiService.getFullPlaceItem(id))
             }catch (e: Exception){
-                _placeItemFlow.value = PlaceItemState.Error
+                placeItemStateFlow.value = PlaceItemState.Error
             }
         }
     }
-    private val responseComments =
-        MutableSharedFlow<Int>(onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val commentListFlow = flow<CommentsState> {
+    private val responseComments = MutableSharedFlow<Int>()
+    override val commentsFlow = flow<CommentsState> {
         responseComments.collect{
             emit(
                 mapper.mapCommentsContainerToCommentsEntity(
@@ -103,23 +100,34 @@ class ApplicationRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveLikedPlace(place: PlaceItemState.Place) {
-        dao.insertPlace(
-            mapper.mapPlaceEntityToPlaceDBModel(place).copy(inLiked = true)
-        )
+        try {
+            dao.insertPlace(dao.getPlaceById(place.id).copy(inLiked = true))
+        }catch (e: Exception){
+            dao.insertPlace(
+                mapper.mapPlaceEntityToPlaceDBModel(place).copy(inLiked = true)
+            )
+        }
+
     }
 
     override suspend fun saveRoutePlace(place: PlaceItemState.Place) {
-        dao.insertPlace(
-            mapper.mapPlaceEntityToPlaceDBModel(place).copy(inRoute = true)
-        )
+        try {
+            dao.insertPlace(dao.getPlaceById(place.id).copy(inRoute = true))
+        } catch(e: Exception){
+            dao.insertPlace(
+                mapper.mapPlaceEntityToPlaceDBModel(place).copy(inRoute = true)
+            )
+        }
     }
 
     override suspend fun deleteLikedPlace(place: PlaceItemState.Place) {
         dao.updateLiked(place.id)
+        dao.deletePlace(place.id)
     }
 
     override suspend fun deleteRoutePlace(place: PlaceItemState.Place) {
         dao.updateRoute(place.id)
+        dao.deletePlace(place.id)
     }
 
     override fun getLikedPlaces(): Flow<List<PlaceItemState.Place>> {

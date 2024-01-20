@@ -1,9 +1,11 @@
 package com.example.tripapp2.data.database
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.tripapp2.domain.entities.PlaceItemState
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -20,4 +22,7 @@ interface Dao {
     suspend fun updateLiked(id: Int)
     @Query("UPDATE places SET inRoute = NOT inRoute WHERE id = :id")
     suspend fun updateRoute(id: Int)
+    @Query("DELETE FROM places WHERE id = :id AND inRoute = 0 AND inLiked = 0")
+    suspend fun deletePlace(id: Int)
+
 }
