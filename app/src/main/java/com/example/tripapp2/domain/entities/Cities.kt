@@ -1,6 +1,7 @@
 package com.example.tripapp2.domain.entities
 
 enum class Cities(val urlCode: String) {
+    DEFAULT(""),
     MSK("msk"),
     KZN("kzn"),
     SPB("spb"),

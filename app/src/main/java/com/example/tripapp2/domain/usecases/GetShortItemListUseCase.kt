@@ -7,7 +7,7 @@ import javax.inject.Inject
 class GetShortItemListUseCase @Inject constructor(
     private val repository: ApplicationRepository
 ) {
-    operator fun invoke(filters: Filters) {
+    suspend operator fun invoke(filters: Filters) {
         repository.getShortPlaceItemList(filters)
     }
 }
