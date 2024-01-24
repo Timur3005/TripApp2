@@ -1,7 +1,7 @@
 package com.example.tripapp2.di
 
 import android.content.Context
-import com.example.tripapp2.MainActivity
+import com.example.tripapp2.presentation.MainActivity
 import dagger.BindsInstance
 import dagger.Component
 
