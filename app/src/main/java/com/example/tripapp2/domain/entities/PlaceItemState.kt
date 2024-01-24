@@ -18,7 +18,9 @@ sealed class PlaceItemState{
         val categories: List<Category>,
         val location: Cities,
         val disableComments: Boolean,
-        val hasParking: Boolean
+        val hasParking: Boolean,
+        val inLiked: Boolean = false,
+        val inRoute: Boolean = false
     ): PlaceItemState()
     data object Loading: PlaceItemState()
     data object Error: PlaceItemState()

@@ -98,7 +98,9 @@ class PlacesAndCommentsMapper @Inject constructor() {
         categories = place.categories,
         location = place.location,
         disableComments = place.disableComments,
-        hasParking = place.hasParking
+        hasParking = place.hasParking,
+        inRoute = place.inRoute,
+        inLiked = place.inLiked
     )
 
     fun mapPlaceDBModelToPlaceEntity(place: PlaceDbModel) = PlaceItemState.Place(
@@ -118,6 +120,8 @@ class PlacesAndCommentsMapper @Inject constructor() {
         categories = place.categories,
         location = place.location,
         disableComments = place.disableComments,
-        hasParking = place.hasParking
+        hasParking = place.hasParking,
+        inLiked = place.inLiked,
+        inRoute = place.inRoute
     )
 }
