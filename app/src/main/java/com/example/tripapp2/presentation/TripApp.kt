@@ -1,4 +1,4 @@
-package com.example.tripapp2
+package com.example.tripapp2.presentation
 
 import android.app.Application
 import com.example.tripapp2.di.DaggerApplicationComponent
