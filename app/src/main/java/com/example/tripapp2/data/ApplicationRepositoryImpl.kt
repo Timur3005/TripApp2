@@ -1,11 +1,11 @@
 package com.example.tripapp2.data
 
-import android.util.Log
 import com.example.tripapp2.data.database.Dao
 import com.example.tripapp2.data.network.ApiService
 import com.example.tripapp2.domain.ApplicationRepository
 import com.example.tripapp2.domain.entities.Category
 import com.example.tripapp2.domain.entities.Cities
+import com.example.tripapp2.domain.entities.Comment
 import com.example.tripapp2.domain.entities.CommentsState
 import com.example.tripapp2.domain.entities.Filters
 import com.example.tripapp2.domain.entities.PlaceItemState
@@ -16,13 +16,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
-import retrofit2.HttpException
 import java.lang.NullPointerException
 import javax.inject.Inject
 
@@ -95,24 +93,25 @@ class ApplicationRepositoryImpl @Inject constructor(
     override suspend fun responsePlaceItem(id: Int){
         responsePlaceItemFlow.emit(id)
     }
-    private val responseComments = MutableSharedFlow<Int>()
-    override val commentsFlow = flow<CommentsState> {
+    private val responseComments =
+        MutableSharedFlow<Int>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    override val commentsFlow = flow {
         responseComments.collect{
             emit(
-                mapper.mapCommentsContainerToCommentsEntity(
-                    apiService.getCommentsById(placeId = it)
-                )
+                withContext(Dispatchers.IO) {
+                    mapper.mapCommentsContainerToCommentEntityList(
+                        apiService.getCommentsById(placeId = it)
+                    )
+                }
             )
         }
-    }.retry(RETRY_COUNT).catch {
-        emit(CommentsState.Error)
     }.stateIn(
         scope = scope,
         started = SharingStarted.Lazily,
-        initialValue = CommentsState.Loading
+        initialValue = listOf()
     )
 
-    override suspend fun getComments(id: Int) {
+    override suspend fun responseComments(id: Int) {
         responseComments.emit(id)
     }
 

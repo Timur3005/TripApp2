@@ -6,8 +6,10 @@ import javax.inject.Inject
 class GetCommentsUseCase @Inject constructor(
     private val repository: ApplicationRepository
 ) {
-    suspend operator fun invoke(id: Int){
-        repository.getComments(id)
+    suspend fun responseComments(id: Int){
+        repository.responseComments(id)
     }
+
+    fun getCommentsFlow() = repository.commentsFlow
 
 }
