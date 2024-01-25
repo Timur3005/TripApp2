@@ -1,5 +1,6 @@
 package com.example.tripapp2.data
 
+import android.util.Log
 import com.example.tripapp2.data.database.Dao
 import com.example.tripapp2.data.network.ApiService
 import com.example.tripapp2.domain.ApplicationRepository
@@ -8,19 +9,21 @@ import com.example.tripapp2.domain.entities.Cities
 import com.example.tripapp2.domain.entities.CommentsState
 import com.example.tripapp2.domain.entities.Filters
 import com.example.tripapp2.domain.entities.PlaceItemState
-import com.example.tripapp2.domain.entities.ShortPlaceItemState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
+import java.lang.NullPointerException
 import javax.inject.Inject
 
 class ApplicationRepositoryImpl @Inject constructor(
@@ -66,19 +69,31 @@ class ApplicationRepositoryImpl @Inject constructor(
         responseShortPlaces.emit(filters)
     }
 
-    override val placeItemStateFlow = MutableStateFlow<PlaceItemState>(PlaceItemState.Loading)
-
-    override suspend fun getPlaceItem(id: Int){
-        try {
-            placeItemStateFlow.value = mapper.mapPlaceDBModelToPlaceEntity(dao.getPlaceById(id))
-        }catch (e: Exception){
-            try {
-                placeItemStateFlow.value =
-                    mapper.mapPlaceDtoToPlaceEntity(apiService.getFullPlaceItem(id))
-            }catch (e: Exception){
-                placeItemStateFlow.value = PlaceItemState.Error
+    override val placeItemFlow = flow {
+        responsePlaceItemFlow.collect{
+            emit(
+                withContext(Dispatchers.IO) {
+                    mapper.mapPlaceDBModelToPlaceEntity(dao.getPlaceById(it))
+                }
+            )
+        }
+    }.catch {
+        if (it is NullPointerException) {
+            responsePlaceItemFlow.collect {
+                emit(withContext(Dispatchers.IO)
+                { mapper.mapPlaceDtoToPlaceEntity(apiService.getFullPlaceItem(it)) })
             }
         }
+    }.stateIn(
+        scope = scope,
+        started = SharingStarted.Lazily,
+        initialValue = null
+    )
+    private val responsePlaceItemFlow =
+        MutableSharedFlow<Int>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    override suspend fun responsePlaceItem(id: Int){
+        responsePlaceItemFlow.emit(id)
     }
     private val responseComments = MutableSharedFlow<Int>()
     override val commentsFlow = flow<CommentsState> {
@@ -102,34 +117,41 @@ class ApplicationRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveLikedPlace(place: PlaceItemState.Place) {
-        try {
-            dao.insertPlace(dao.getPlaceById(place.id).copy(inLiked = true))
-        }catch (e: Exception){
-            dao.insertPlace(
-                mapper.mapPlaceEntityToPlaceDBModel(place).copy(inLiked = true)
-            )
+        withContext(Dispatchers.IO){
+            try {
+                dao.insertPlace(dao.getPlaceById(place.id).copy(inLiked = true))
+            }catch (e: Exception){
+                dao.insertPlace(
+                    mapper.mapPlaceEntityToPlaceDBModel(place).copy(inLiked = true)
+                )
+            }
         }
-
     }
 
     override suspend fun saveRoutePlace(place: PlaceItemState.Place) {
-        try {
-            dao.insertPlace(dao.getPlaceById(place.id).copy(inRoute = true))
-        } catch(e: Exception){
-            dao.insertPlace(
-                mapper.mapPlaceEntityToPlaceDBModel(place).copy(inRoute = true)
-            )
+        withContext(Dispatchers.IO) {
+            try {
+                dao.insertPlace(dao.getPlaceById(place.id).copy(inRoute = true))
+            } catch (e: Exception) {
+                dao.insertPlace(
+                    mapper.mapPlaceEntityToPlaceDBModel(place).copy(inRoute = true)
+                )
+            }
         }
     }
 
     override suspend fun deleteLikedPlace(place: PlaceItemState.Place) {
-        dao.updateLiked(place.id)
-        dao.deletePlace(place.id)
+        withContext(Dispatchers.IO) {
+            dao.updateLiked(place.id)
+            dao.deletePlace(place.id)
+        }
     }
 
     override suspend fun deleteRoutePlace(place: PlaceItemState.Place) {
-        dao.updateRoute(place.id)
-        dao.deletePlace(place.id)
+        withContext(Dispatchers.IO) {
+            dao.updateRoute(place.id)
+            dao.deletePlace(place.id)
+        }
     }
 
     override fun getLikedPlaces(): Flow<List<PlaceItemState.Place>> {
