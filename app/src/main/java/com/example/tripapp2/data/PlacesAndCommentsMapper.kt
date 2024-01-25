@@ -76,10 +76,8 @@ class PlacesAndCommentsMapper @Inject constructor() {
             title = dto.title
         )
 
-    fun mapShortListDtoContainerToShortItemStateEntity(dtoContainer: ShortPlacesListContainerDto) =
-        ShortPlaceItemState.ShortPlaceItemList(dtoContainer.results
-            .map { mapShortPlaceItemToShortPlaceItemEntity(it) }
-        )
+    fun mapShortListDtoContainerToShortPlaceItemEntity(dtoContainer: ShortPlacesListContainerDto) =
+        dtoContainer.results.map { mapShortPlaceItemToShortPlaceItemEntity(it) }
 
     fun mapPlaceEntityToPlaceDBModel(place: PlaceItemState.Place) = PlaceDbModel(
         id = place.id,

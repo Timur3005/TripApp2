@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.stateIn
@@ -36,18 +35,19 @@ class ApplicationRepositoryImpl @Inject constructor(
 
     override val shortPlacesFlow = flow {
         emit(
-            mapper.mapShortListDtoContainerToShortItemStateEntity(
-                apiService.getShortPlacesList(
-                    location = DEFAULT_FILTERS.location.urlCode,
-                    categories = DEFAULT_FILTERS.category.joinToString(",") { it.slug }
+            withContext(Dispatchers.IO){
+                mapper.mapShortListDtoContainerToShortPlaceItemEntity(
+                    apiService.getShortPlacesList(
+                        location = DEFAULT_FILTERS.location.urlCode,
+                        categories = DEFAULT_FILTERS.category.joinToString(",") { it.slug }
+                    )
                 )
-            )
+            }
         )
         responseShortPlaces.collect {
-            emit(ShortPlaceItemState.Loading)
             withContext(Dispatchers.IO){
                 emit(
-                    mapper.mapShortListDtoContainerToShortItemStateEntity(
+                    mapper.mapShortListDtoContainerToShortPlaceItemEntity(
                         apiService.getShortPlacesList(
                             location = it.location.urlCode,
                             categories = it.category.joinToString(","){item -> item.slug }
@@ -56,15 +56,13 @@ class ApplicationRepositoryImpl @Inject constructor(
                 )
             }
         }
-    }.retry(RETRY_COUNT).catch{
-        emit(ShortPlaceItemState.Error)
-    }.stateIn(
+    }.retry(RETRY_COUNT).stateIn(
         scope = scope,
         started = SharingStarted.Lazily,
-        initialValue = ShortPlaceItemState.Loading
+        initialValue = listOf()
     )
 
-    override suspend fun getShortPlaceItemList(filters: Filters) {
+    override suspend fun responseShortPlaceItemList(filters: Filters) {
         responseShortPlaces.emit(filters)
     }
 
