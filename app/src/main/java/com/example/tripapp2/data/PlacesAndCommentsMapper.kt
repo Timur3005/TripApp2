@@ -13,7 +13,6 @@ import com.example.tripapp2.domain.entities.Comment
 import com.example.tripapp2.domain.entities.CommentsState
 import com.example.tripapp2.domain.entities.PlaceItemState
 import com.example.tripapp2.domain.entities.ShortPlaceItem
-import com.example.tripapp2.domain.entities.ShortPlaceItemState
 import javax.inject.Inject
 
 class PlacesAndCommentsMapper @Inject constructor() {
@@ -63,11 +62,10 @@ class PlacesAndCommentsMapper @Inject constructor() {
             replyToId = commentDto.replyTo
         )
 
-    fun mapCommentsContainerToCommentsEntity(commentsContainer: CommentsContainerDto):
-            CommentsState.CommentHolder{
-        return CommentsState.CommentHolder(
-            commentsContainer.comments.map { mapCommentDtoToCommentEntity(it) }
-        )
+    fun mapCommentsContainerToCommentEntityList(commentsContainer: CommentsContainerDto):
+            List<Comment> {
+        return commentsContainer.comments.map { mapCommentDtoToCommentEntity(it) }
+
     }
 
     private fun mapShortPlaceItemToShortPlaceItemEntity(dto: ShortPlaceItemDto) =
@@ -76,10 +74,8 @@ class PlacesAndCommentsMapper @Inject constructor() {
             title = dto.title
         )
 
-    fun mapShortListDtoContainerToShortItemStateEntity(dtoContainer: ShortPlacesListContainerDto) =
-        ShortPlaceItemState.ShortPlaceItemList(dtoContainer.results
-            .map { mapShortPlaceItemToShortPlaceItemEntity(it) }
-        )
+    fun mapShortListDtoContainerToShortPlaceItemEntity(dtoContainer: ShortPlacesListContainerDto) =
+        dtoContainer.results.map { mapShortPlaceItemToShortPlaceItemEntity(it) }
 
     fun mapPlaceEntityToPlaceDBModel(place: PlaceItemState.Place) = PlaceDbModel(
         id = place.id,

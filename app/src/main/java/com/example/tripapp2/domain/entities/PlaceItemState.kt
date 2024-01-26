@@ -24,4 +24,5 @@ sealed class PlaceItemState{
     ): PlaceItemState()
     data object Loading: PlaceItemState()
     data object Error: PlaceItemState()
+    data object HttpError: PlaceItemState()
 }

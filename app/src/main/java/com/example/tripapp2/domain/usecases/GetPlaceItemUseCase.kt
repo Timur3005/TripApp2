@@ -6,7 +6,9 @@ import javax.inject.Inject
 class GetPlaceItemUseCase @Inject constructor(
     private val repository: ApplicationRepository
 ) {
-    suspend operator fun invoke(id: Int) {
-        repository.getPlaceItem(id)
+    suspend fun responsePlaceItem(id: Int) {
+        repository.responsePlaceItem(id)
     }
+
+    fun getPlaceItemFlow() = repository.placeItemFlow
 }

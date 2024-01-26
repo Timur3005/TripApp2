@@ -1,13 +1,13 @@
 package com.example.tripapp2.presentation.home
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.doAfterTextChanged
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -17,7 +17,6 @@ import com.example.tripapp2.databinding.FragmentHomeBinding
 import com.example.tripapp2.domain.entities.Category
 import com.example.tripapp2.domain.entities.Cities
 import com.example.tripapp2.domain.entities.Filters
-import com.example.tripapp2.domain.entities.ShortPlaceItem
 import com.example.tripapp2.domain.entities.ShortPlaceItemState
 import com.example.tripapp2.presentation.TripApp
 import com.example.tripapp2.presentation.ViewModelFactory
@@ -59,9 +58,15 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setRecycler()
-        viewModel.getPlaceWithFilters(
-            Filters(Cities.DEFAULT, listOf(Category.DEFAULT))
-        )
+        binding.etFind.doAfterTextChanged {
+            viewModel.getPlaceWithFilters(
+                Filters(
+                    location = Cities.DEFAULT,
+                    category = listOf(Category.DEFAULT),
+                    query = it?.toString() ?: ""
+                )
+            )
+        }
         observeViewModel()
     }
 
@@ -70,8 +75,8 @@ class HomeFragment : Fragment() {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.placesFlow.collect {
                     when (it) {
-                        ShortPlaceItemState.Error -> Log.d("MyTaggg", "Error")
-                        ShortPlaceItemState.Loading -> Log.d("MyTaggg", "Loading")
+                        ShortPlaceItemState.Error -> Log.d("list", "Error")
+                        ShortPlaceItemState.Loading -> Log.d("list", "Loading")
                         is ShortPlaceItemState.ShortPlaceItemList -> {
                             placesAdapter.submitList(it.list)
                         }
