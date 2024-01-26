@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -57,9 +58,15 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setRecycler()
-        viewModel.getPlaceWithFilters(
-            Filters(Cities.DEFAULT, listOf(Category.DEFAULT))
-        )
+        binding.etFind.doAfterTextChanged {
+            viewModel.getPlaceWithFilters(
+                Filters(
+                    location = Cities.DEFAULT,
+                    category = listOf(Category.DEFAULT),
+                    query = it?.toString() ?: ""
+                )
+            )
+        }
         observeViewModel()
     }
 
